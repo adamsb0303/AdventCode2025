@@ -10,7 +10,71 @@ public class Day08 {
             Scanner reader = new Scanner(file);
 
             List<Junction> junctionBoxes = new ArrayList<>();
-            char junctionId = 'A';
+            int junctionId = 1;
+            while (reader.hasNext()) {
+                String[] coords = reader.nextLine().split(",");
+
+                junctionBoxes.add(new Junction(junctionId, Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2])));
+                junctionId++;
+            }
+            
+            Map<Junction[], Double> junctionVectors = new HashMap<>();
+            for (int i = 0; i < junctionBoxes.size(); i++) {
+                for (int j = i + 1; j < junctionBoxes.size(); j++) {
+                    double newDistance = findDistance(junctionBoxes.get(i), junctionBoxes.get(j));
+                    junctionVectors.put(new Junction[]{junctionBoxes.get(i), junctionBoxes.get(j)}, newDistance);
+                }
+            }
+            
+            List<Junction[]> sortedJunctions = 
+                    junctionVectors.entrySet().stream()
+                            .sorted(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey)
+                            .toList()
+                            .subList(0, 1000);
+
+            
+            for (int i = 0; i < 1000; i++) {
+                Junction[] currentVector = sortedJunctions.get(i);
+                
+                Junction junctionA = currentVector[0];
+                Junction junctionB = currentVector[1];
+                
+                if(junctionA.circuit != junctionB.circuit) {
+                    junctionA.circuit.addAll(junctionB.circuit);
+                    
+                    for(Junction junction : junctionB.circuit) {
+                        junction.circuit = junctionA.circuit;
+                    }
+                }
+            }
+            
+            long answer = 1;
+            List<Integer> largestCircuits = 
+                    junctionBoxes.stream()
+                            .map(junction -> junction.circuit)
+                            .distinct()
+                            .map(Set::size)
+                            .sorted(Comparator.reverseOrder())
+                            .toList();
+            
+            for(int i = 0; i < 3; i++) {
+                answer *= largestCircuits.get(i);
+            }
+            System.out.println("Answer: " + answer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void part2() {
+        try {
+            //Read the file
+            File file = new File("Puzzles/Day08.txt");
+            Scanner reader = new Scanner(file);
+
+            List<Junction> junctionBoxes = new ArrayList<>();
+            int junctionId = 1;
             while (reader.hasNext()) {
                 String[] coords = reader.nextLine().split(",");
 
@@ -26,64 +90,36 @@ public class Day08 {
                 }
             }
 
-            List<List<Character>> connectedCircuits = new ArrayList<>();
-            for (int i = 0; i < 1000; i++) {
-                Junction[] smallestVector = new Junction[2];
-                double closestDistance = Double.MAX_VALUE;
-                for (Map.Entry<Junction[], Double> entry : junctionVectors.entrySet()) {
-                    if (entry.getValue() < closestDistance) {
-                        smallestVector = entry.getKey();
-                        closestDistance = entry.getValue();
-                    }
-                }
-                Junction junctionA = smallestVector[0];
-                Junction junctionB = smallestVector[1];
-                
-                if(junctionA.connected && junctionB.connected){
-                    if(junctionA.circuitNumber != junctionB.circuitNumber) {
-                        int largerIndex = (junctionA.circuitNumber > junctionB.circuitNumber) ? 0 : 1;
-                        int smallerIndex = Math.abs(largerIndex - 1);
-                        connectedCircuits.get(smallestVector[smallerIndex].circuitNumber - 1).addAll(connectedCircuits.get(smallestVector[largerIndex].circuitNumber - 1));
-                        connectedCircuits.set(smallestVector[largerIndex].circuitNumber - 1, new ArrayList<>());
-                        smallestVector[largerIndex].circuitNumber = smallestVector[smallerIndex].circuitNumber;
-                    }
-                }
-                else if(!junctionA.connected && !junctionB.connected) {
-                    junctionA.connected = true;
-                    junctionB.connected = true;
-                    
-                    connectedCircuits.add(new ArrayList<>());
-                    junctionA.circuitNumber = connectedCircuits.size();
-                    junctionB.circuitNumber = connectedCircuits.size();
-                    connectedCircuits.get(connectedCircuits.size() - 1).add(junctionA.id);
-                    connectedCircuits.get(connectedCircuits.size() - 1).add(junctionB.id);
-                }
-                else {
-                    int connectedIndex = (junctionA.connected) ? 0 : 1;
-                    int disconnectedIndex = (junctionA.connected) ? 1 : 0;
-                    
-                    smallestVector[disconnectedIndex].connected = true;
-                    smallestVector[disconnectedIndex].circuitNumber = smallestVector[connectedIndex].circuitNumber;
-                    
-                    connectedCircuits.get(smallestVector[connectedIndex].circuitNumber - 1).add(smallestVector[disconnectedIndex].id);
-                }
-                junctionVectors.remove(smallestVector);
-            }
-            
-            long answer = 1;
-            List<Integer> largestCircuits = 
-                    connectedCircuits.stream()
-                            .map(List::size)
-                            .sorted()
+            List<Junction[]> sortedJunctions =
+                    junctionVectors.entrySet().stream()
+                            .sorted(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey)
                             .toList();
-            for(int i = 1; i <= 3; i++) {
-                System.out.println(largestCircuits.get(largestCircuits.size() - i));
-                answer *= largestCircuits.get(largestCircuits.size() - i);
+
+
+            for (int i = 0; i < junctionVectors.size(); i++) {
+                Junction[] currentVector = sortedJunctions.get(i);
+
+                Junction junctionA = currentVector[0];
+                Junction junctionB = currentVector[1];
+                
+                if(junctionA.circuit != junctionB.circuit) {
+                    junctionA.circuit.addAll(junctionB.circuit);
+
+                    for(Junction junction : junctionB.circuit) {
+                        junction.circuit = junctionA.circuit;
+                    }
+                    
+                    if(junctionA.circuit.size() == junctionBoxes.size()) {
+                        System.out.println("Answer: " + ((long) junctionA.x * (long) junctionB.x));
+                        break;
+                    }
+                }
             }
-            System.out.println(answer);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
     }
     
     private static double findDistance(Junction a, Junction b){
@@ -92,20 +128,22 @@ public class Day08 {
 }
 
 class Junction {
-    public char id;
+    public int id;
     public int x;
     public int y;
     public int z;
-    public boolean connected = false;
-    public int circuitNumber = -1;
+    public Set<Junction> circuit;
     
     public Junction closestJunction;
 
-    public Junction(char id, int x, int y, int z) {
+    public Junction(int id, int x, int y, int z) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.z = z;
+        
+        circuit = new HashSet<>();
+        circuit.add(this);
     }
 
     public void setClosestJunction(Junction closestJunction) {
