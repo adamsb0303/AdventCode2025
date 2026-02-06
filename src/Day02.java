@@ -4,6 +4,13 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 public class Day02 {
+    public static void main(String args[]) {
+        System.out.println("Part 1 solution");
+        part1();
+        System.out.println("Part 2 solution");
+        part2();
+    }
+    
     public static void part1() {
         try {
             //Read the file
