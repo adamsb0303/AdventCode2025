@@ -64,7 +64,7 @@ public class Day09 {
                     if(redTiles.get(i).x != redTiles.get(j).x && redTiles.get(i).y != redTiles.get(j).y)
                         continue;
                     
-                    TileEdge tileEdge = new TileEdge(redTiles.get(i), redTiles.get(j), redTiles.get(i).x == redTiles.get(j).x);
+                    TileEdge tileEdge = new TileEdge(redTiles.get(i), redTiles.get(j));
                     tileEdges.add(tileEdge);
                 }
             }
@@ -72,17 +72,31 @@ public class Day09 {
             long biggestArea = 0;
             for(int i = 0; i < redTiles.size(); i++){
                 for(int j = i + 1; j < redTiles.size(); j++){
-                    Tile fakeTile1 = new Tile(redTiles.get(i).x , redTiles.get(j).y);
-                    Tile fakeTile2 = new Tile(redTiles.get(j).x , redTiles.get(i).y);;
+                    Tile tile1 = redTiles.get(i);
+                    Tile tile2 = redTiles.get(j);
 
-                    long width = Math.abs(redTiles.get(i).x - redTiles.get(j).x) + 1;
-                    long height = Math.abs(redTiles.get(i).y - redTiles.get(j).y) + 1;
+                    long width = Math.abs(tile1.x - tile2.x) + 1;
+                    long height = Math.abs(tile1.y - tile2.y) + 1;
                     
                     if(height * width <= biggestArea)
                         continue;
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile1)).toList().isEmpty())
+                    
+                    Tile fakeTile1 = new Tile(tile1.x , tile2.y);
+                    Tile fakeTile2 = new Tile(tile2.x , tile1.y);
+                    
+                    TileEdge[] areaCheck = {new TileEdge(tile1, fakeTile1), new TileEdge(tile1, fakeTile2), new TileEdge(tile2, fakeTile1), new TileEdge(tile2, fakeTile2)};
+                    
+                    List<TileEdge> test = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[0])).toList();
+                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[0])).toList().size() > 0)
                         continue;
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile2)).toList().isEmpty())
+
+                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[1])).toList().size() > 0)
+                        continue;
+
+                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[2])).toList().size() > 0)
+                        continue;
+
+                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[3])).toList().size() > 0)
                         continue;
 
                     biggestArea = height * width;
@@ -104,14 +118,19 @@ class Tile {
         this.x = x;
         this.y = y;
     }
+    
+    public boolean equals(Tile tile){
+        return this.x == tile.x && this.y == tile.y;
+    }
 }
 
 class TileEdge {
     public Tile start;
     public Tile end;
-    char direction; 
+    char direction;
     
-    TileEdge(Tile tileA, Tile tileB, boolean direction) {
+    TileEdge(Tile tileA, Tile tileB) {
+        boolean direction = tileA.y != tileB.y;
         if(direction){
             start = (tileA.y < tileB.y) ? tileA : tileB;
             end = (tileA.y < tileB.y) ? tileB : tileA;
@@ -120,7 +139,7 @@ class TileEdge {
             end = (tileA.x < tileB.x) ? tileB : tileA;
         }
         
-        this.direction = (direction) ? 'x' : 'y';
+        this.direction = (direction) ? 'y' : 'x';
     }
     
     public boolean containsPoint(Tile tile){
@@ -129,5 +148,22 @@ class TileEdge {
         if(tile.y < start.y || tile.y > end.y)
             return false;
         return true;
+    }
+    
+    public boolean tileOverlaps(TileEdge tileEdge) {
+        if (tileEdge.direction == this.direction)
+            return false;
+        
+        if(tileEdge.direction == 'x'){
+            if(tileEdge.start.y > this.end.y || tileEdge.start.y < this.start.y)
+                return false;
+            else 
+                return tileEdge.start.x < this.start.x && tileEdge.end.x > this.start.x;
+        } else {
+            if(tileEdge.start.x > this.end.x || tileEdge.start.x < this.start.x)
+                return false;
+            else
+                return tileEdge.start.y < this.start.y && tileEdge.end.y > this.start.y;
+        }
     }
 }
