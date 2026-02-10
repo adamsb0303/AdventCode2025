@@ -78,6 +78,15 @@ public class Day09 {
                     long width = Math.abs(tile1.x - tile2.x) + 1;
                     long height = Math.abs(tile1.y - tile2.y) + 1;
                     
+                    if(height * width == 1566346198){
+                        System.out.println("THE ANSWER IS " + tile1.x + ", " + tile1.y + " | " + tile2.x + ", " + tile2.y);
+                        System.out.println("THE CURRENT HIGHEST IS " + biggestArea);
+                    }
+                    
+                    if(height * width == 2403572472L) {
+                        System.out.println("THIS IS THE PROBLEM " + tile1.x + ", " + tile1.y + " | " + tile2.x + ", " + tile2.y);
+                    }
+                    
                     if(height * width <= biggestArea)
                         continue;
                     
@@ -85,19 +94,39 @@ public class Day09 {
                     Tile fakeTile2 = new Tile(tile2.x , tile1.y);
                     
                     TileEdge[] areaCheck = {new TileEdge(tile1, fakeTile1), new TileEdge(tile1, fakeTile2), new TileEdge(tile2, fakeTile1), new TileEdge(tile2, fakeTile2)};
-                    
-                    List<TileEdge> test = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[0])).toList();
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[0])).toList().size() > 0)
-                        continue;
 
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[1])).toList().size() > 0)
-                        continue;
+                    //Edge is overlapping, but there are valid points past the point of intersection.
+                    List<TileEdge> checkOverlapEdge1 = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[0])).toList();
+                    if(!checkOverlapEdge1.isEmpty()) {
+                        if (checkOverlapEdge1.size() > 1)
+                            continue;
+                        else if (tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile1)).toList().isEmpty())
+                            continue;
+                    }
 
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[2])).toList().size() > 0)
-                        continue;
+                    List<TileEdge> checkOverlapEdge2 = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[1])).toList();
+                    if(!checkOverlapEdge2.isEmpty()) {
+                        if (checkOverlapEdge2.size() > 1)
+                            continue;
+                        else if (tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile2)).toList().isEmpty())
+                            continue;
+                    }
 
-                    if(tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[3])).toList().size() > 0)
-                        continue;
+                    List<TileEdge> checkOverlapEdge3 = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[2])).toList();
+                    if(!checkOverlapEdge3.isEmpty()) {
+                        if (checkOverlapEdge3.size() > 1)
+                            continue;
+                        else if (tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile1)).toList().isEmpty())
+                            continue;
+                    }
+
+                    List<TileEdge> checkOverlapEdge4 = tileEdges.stream().filter(tileEdge -> tileEdge.tileOverlaps(areaCheck[3])).toList();
+                    if(!checkOverlapEdge4.isEmpty()) {
+                        if (checkOverlapEdge4.size() > 1)
+                            continue;
+                        else if (tileEdges.stream().filter(tileEdge -> tileEdge.containsPoint(fakeTile2)).toList().isEmpty())
+                            continue;
+                    }
 
                     biggestArea = height * width;
                 }
@@ -157,7 +186,7 @@ class TileEdge {
         if(tileEdge.direction == 'x'){
             if(tileEdge.start.y > this.end.y || tileEdge.start.y < this.start.y)
                 return false;
-            else 
+            else
                 return tileEdge.start.x < this.start.x && tileEdge.end.x > this.start.x;
         } else {
             if(tileEdge.start.x > this.end.x || tileEdge.start.x < this.start.x)
